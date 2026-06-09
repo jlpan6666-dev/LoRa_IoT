@@ -13,6 +13,7 @@ export default function BluetoothManager() {
     mqttStatus,
     messages,
     liveData,
+    logs,
     clearMessages
   } = useBluetoothGateway();
 
