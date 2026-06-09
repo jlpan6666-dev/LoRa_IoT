@@ -61,7 +61,7 @@ export default function NewDeviceWizard({ onClose, onDeviceAdded }) {
 
   return (
     <div className="modal-overlay">
-      <div className="modal-content card" style={{ maxWidth: step === 1 ? '900px' : '500px', width: '95%', transition: 'all 0.3s', maxHeight: '90vh', overflowY: 'auto' }}>
+      <div className="modal-content card" style={{ maxWidth: step === 1 ? '1100px' : '500px', width: '95%', transition: 'all 0.3s', maxHeight: '90vh', overflowY: 'auto' }}>
         <div className="modal-header">
           <h2>新增裝置精靈</h2>
           <button className="icon-btn" onClick={onClose}><X size={20}/></button>

@@ -89,9 +89,14 @@ export default function BluetoothManager({ onMqttUpdate }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+      <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
         
-        {/* WiFi Config */}
+        {/* Left Column */}
+        <div style={{ flex: '2 1 600px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+            
+            {/* WiFi Config */}
         <div className="card">
           <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px' }}>
             <Wifi size={18} /> WiFi 設定
@@ -210,22 +215,23 @@ export default function BluetoothManager({ onMqttUpdate }) {
           </table>
         </div>
       </div>
+    </div>
 
-      {/* Terminal Logs */}
-      <div className="card" style={{ marginTop: '20px' }}>
-        <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px' }}>
-          <Activity size={18} /> 藍牙通訊日誌
-        </h3>
-        <div style={{
-          background: '#0f172a',
-          padding: '10px',
-          borderRadius: '8px',
-          fontFamily: 'monospace',
-          fontSize: '13px',
-          height: '200px',
-          overflowY: 'auto',
-          border: '1px solid rgba(255,255,255,0.1)'
-        }}>
+    {/* Right Column (Terminal Logs) */}
+    <div className="card" style={{ flex: '1 1 300px', position: 'sticky', top: '20px' }}>
+      <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px' }}>
+        <Activity size={18} /> 藍牙通訊日誌
+      </h3>
+      <div style={{
+        background: '#0f172a',
+        padding: '10px',
+        borderRadius: '8px',
+        fontFamily: 'monospace',
+        fontSize: '13px',
+        height: '450px',
+        overflowY: 'auto',
+        border: '1px solid rgba(255,255,255,0.1)'
+      }}>
           {logs.map((log, i) => (
             <div key={i} style={{ 
               color: log.type === 'error' ? '#ef4444' : log.type === 'success' ? '#10b981' : '#f8fafc',
@@ -238,6 +244,8 @@ export default function BluetoothManager({ onMqttUpdate }) {
           {logs.length === 0 && <div style={{ color: '#64748b' }}>尚無通訊紀錄...</div>}
         </div>
       </div>
+
     </div>
-  );
+  </div>
+);
 }

@@ -26,24 +26,26 @@ export function useBluetoothGateway() {
     setLogs(prev => [...prev, { time: new Date(), msg, type }]);
   }, []);
 
-  const send = async (msg) => {
-    if (!txCharRef.current) {
-      addLog('尚未連接藍牙', 'error');
-      return;
-    }
-    const CHUNK = 18;
-    try {
-      addLog(`> ${msg}`);
-      for (let i = 0; i < msg.length; i += CHUNK) {
-        const chunk = msg.slice(i, i + CHUNK);
-        const data = new TextEncoder().encode(chunk);
-        await txCharRef.current.writeValue(data);
-        await new Promise(r => setTimeout(r, 60)); // prevent overflow
+  const send = useCallback((msg) => {
+    sendQueue.current = sendQueue.current.then(async () => {
+      if (!txCharRef.current) {
+        addLog('尚未連接藍牙', 'error');
+        return;
       }
-    } catch (e) {
-      addLog(`傳送失敗: ${e.message}`, 'error');
-    }
-  };
+      try {
+        addLog(`> ${msg}`);
+        const CHUNK = 18;
+        for (let i = 0; i < msg.length; i += CHUNK) {
+          const chunk = msg.slice(i, i + CHUNK);
+          const data = new TextEncoder().encode(chunk);
+          await txCharRef.current.writeValue(data);
+          await new Promise(r => setTimeout(r, 60)); // prevent overflow
+        }
+      } catch (e) {
+        addLog(`傳送失敗: ${e.message}`, 'error');
+      }
+    });
+  }, [addLog]);
 
   const handleCharacteristicValueChanged = (event) => {
     const val = new TextDecoder().decode(event.target.value);
