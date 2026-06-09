@@ -37,7 +37,11 @@ export function useBluetoothGateway() {
       for (let i = 0; i < msg.length; i += CHUNK) {
         const chunk = msg.slice(i, i + CHUNK);
         const data = new TextEncoder().encode(chunk);
-        await txCharRef.current.writeValue(data);
+        if (txCharRef.current.properties.writeWithoutResponse) {
+          await txCharRef.current.writeValueWithoutResponse(data);
+        } else {
+          await txCharRef.current.writeValue(data);
+        }
         await new Promise(r => setTimeout(r, 60)); // prevent overflow
       }
     } catch (e) {

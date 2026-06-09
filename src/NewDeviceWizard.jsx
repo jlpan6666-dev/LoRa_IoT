@@ -38,7 +38,7 @@ export default function NewDeviceWizard({ onClose, onDeviceAdded }) {
       onClose();
     } catch (err) {
       console.error(err);
-      alert('新增失敗');
+      alert('新增失敗: ' + err.message);
     }
     setIsSubmitting(false);
   };
