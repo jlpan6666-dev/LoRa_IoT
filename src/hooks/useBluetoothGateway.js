@@ -59,6 +59,7 @@ export function useBluetoothGateway() {
     } else if (val.startsWith('WIFI:SSIDS:')) {
       const names = val.slice(11).split(',').filter(n => n.trim());
       setWifiList(names);
+      setMessages(m => ({ ...m, wifi: `✅ 掃描完成，找到 ${names.length} 個網路` }));
     } else if (val.startsWith('SUCCESS:')) {
       setMessages(m => ({ ...m, wifi: '✅ 已連線 IP: ' + val.slice(8) }));
       send('WIFI:GET');

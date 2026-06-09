@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useBluetoothGateway } from './hooks/useBluetoothGateway';
 import { Bluetooth, Wifi, Server, Activity, Send, Save } from 'lucide-react';
 
-export default function BluetoothManager() {
+export default function BluetoothManager({ onMqttUpdate }) {
   const {
     connect,
     disconnect,
@@ -41,6 +41,17 @@ export default function BluetoothManager() {
       setMqttPw(mqttStatus.pw);
     }
   }, [mqttStatus]);
+
+  React.useEffect(() => {
+    if (onMqttUpdate) {
+      onMqttUpdate({ broker: mqttBroker, port: mqttPort, topic: mqttTopic, user: mqttUser, pw: mqttPw });
+    }
+  }, [mqttBroker, mqttPort, mqttTopic, mqttUser, mqttPw, onMqttUpdate]);
+
+  const handleScanWifi = () => {
+    // 讓裝置掃描 WiFi
+    send('WIFI:SCAN');
+  };
 
   const handleApplyWifi = () => {
     if (!wifiSsid || !wifiPw) return alert('請填寫 SSID 與密碼');
@@ -92,7 +103,21 @@ export default function BluetoothManager() {
           
           <div className="input-group" style={{ marginBottom: '10px' }}>
             <label>SSID</label>
-            <input value={wifiSsid} onChange={e=>setWifiSsid(e.target.value)} placeholder="WiFi 名稱" />
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input 
+                list="wifi-list"
+                value={wifiSsid} 
+                onChange={e=>setWifiSsid(e.target.value)} 
+                placeholder="WiFi 名稱" 
+                style={{ flex: 1 }}
+              />
+              <datalist id="wifi-list">
+                {wifiList.map(ssid => <option key={ssid} value={ssid} />)}
+              </datalist>
+              <button type="button" className="btn-secondary" onClick={handleScanWifi} disabled={!deviceInfo.connected} style={{ whiteSpace: 'nowrap', padding: '0 10px', fontSize: '13px' }}>
+                掃描周圍
+              </button>
+            </div>
           </div>
           <div className="input-group" style={{ marginBottom: '15px' }}>
             <label>密碼</label>
@@ -157,23 +182,27 @@ export default function BluetoothManager() {
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                 <th style={{ padding: '8px' }}>裝置 ID</th>
-                <th style={{ padding: '8px' }}>溫度</th>
-                <th style={{ padding: '8px' }}>濕度</th>
-                <th style={{ padding: '8px' }}>CO2</th>
-                <th style={{ padding: '8px' }}>PM2.5</th>
+                <th style={{ padding: '8px' }}>溫度 (°C)</th>
+                <th style={{ padding: '8px' }}>濕度 (%)</th>
+                <th style={{ padding: '8px' }}>通道 A</th>
+                <th style={{ padding: '8px' }}>通道 B</th>
+                <th style={{ padding: '8px' }}>照度 (lx)</th>
+                <th style={{ padding: '8px' }}>電壓 (V)</th>
               </tr>
             </thead>
             <tbody>
               {liveData.length === 0 ? (
-                <tr><td colSpan="5" style={{ padding: '16px', textAlign: 'center', color: '#64748b' }}>尚無資料 (等待硬體回報)</td></tr>
+                <tr><td colSpan="7" style={{ padding: '16px', textAlign: 'center', color: '#64748b' }}>尚無資料 (等待硬體回報)</td></tr>
               ) : (
                 liveData.map((d, i) => (
                   <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                     <td style={{ padding: '8px' }}>{d.id || '--'}</td>
-                    <td style={{ padding: '8px' }}>{d.temp || d.t || '--'}</td>
-                    <td style={{ padding: '8px' }}>{d.hum || d.h || d.rh || '--'}</td>
-                    <td style={{ padding: '8px' }}>{d.c || d.cal || '--'}</td>
-                    <td style={{ padding: '8px' }}>{d.p2 || d.pm25 || '--'}</td>
+                    <td style={{ padding: '8px' }}>{d.temp || '--'}</td>
+                    <td style={{ padding: '8px' }}>{d.humi || '--'}</td>
+                    <td style={{ padding: '8px' }}>{d['ir-1'] || '--'}</td>
+                    <td style={{ padding: '8px' }}>{d['ir-2'] || '--'}</td>
+                    <td style={{ padding: '8px' }}>{d.lux || '--'}</td>
+                    <td style={{ padding: '8px' }}>{d['bat-v'] || '--'}</td>
                   </tr>
                 ))
               )}
