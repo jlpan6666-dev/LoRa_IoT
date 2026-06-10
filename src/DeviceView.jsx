@@ -209,6 +209,7 @@ export default function DeviceView({ deviceId }) {
       {showBuilder && (
         <ComponentBuilder 
           device={device} 
+          liveData={liveData}
           onClose={() => setShowBuilder(false)} 
         />
       )}

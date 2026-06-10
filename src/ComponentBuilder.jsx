@@ -3,13 +3,27 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { X } from 'lucide-react';
 
-export default function ComponentBuilder({ device, onClose }) {
-  const [type, setType] = useState('Stat');
+export default function ComponentBuilder({ device, liveData, onClose }) {
+  const [type, setType] = useState('Gauge');
   const [name, setName] = useState('');
   const [dataPath, setDataPath] = useState('');
   const [unit, setUnit] = useState('');
   const [min, setMin] = useState(0);
   const [max, setMax] = useState(100);
+
+  const handleDataPathChange = (e) => {
+    const val = e.target.value;
+    setDataPath(val);
+    
+    if (!name) {
+      if (val === 'temp') { setName('溫度'); setUnit('°C'); setMin(0); setMax(50); }
+      else if (val === 'humi') { setName('濕度'); setUnit('%'); setMin(0); setMax(100); }
+      else if (val === 'lux') { setName('照度'); setUnit('lx'); setMin(0); setMax(1000); }
+      else if (val === 'bat-v') { setName('電池電壓'); setUnit('V'); setMin(0); setMax(5); }
+      else if (val.startsWith('ir-')) { setName(`紅外線 ${val.split('-')[1]}`); setMin(0); setMax(100); }
+      else { setName(val); }
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -62,8 +76,19 @@ export default function ComponentBuilder({ device, onClose }) {
           
           <div className="input-group">
             <label>數據來源 JSON Key (Data Path)</label>
-            <input value={dataPath} onChange={e=>setDataPath(e.target.value)} placeholder="例如: temp" required />
-            <small style={{color: '#94a3b8', marginTop: '4px', display:'block'}}>填寫 MQTT Payload 中對應的 Key，例如 Payload 是 {"{"}"temp": 25.4{"}"}，這裡就填 temp。</small>
+            <input 
+              list="data-keys"
+              value={dataPath} 
+              onChange={handleDataPathChange} 
+              placeholder="例如: temp 或從清單選擇" 
+              required 
+            />
+            <datalist id="data-keys">
+              {Object.keys(liveData || {}).filter(k => k !== 'id').map(k => (
+                <option key={k} value={k} />
+              ))}
+            </datalist>
+            <small style={{color: '#94a3b8', marginTop: '4px', display:'block'}}>點擊輸入框可自動帶入硬體回報的欄位，或手動填寫對應的 JSON Key。</small>
           </div>
 
           <div className="input-group">
