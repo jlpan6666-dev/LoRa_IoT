@@ -250,12 +250,14 @@ body {
 }
 
 .input-group input, .input-group select {
+  width: 100%;
   padding: 10px;
   border-radius: 6px;
   border: 1px solid var(--border-color);
   background: rgba(0, 0, 0, 0.2);
   color: white;
   outline: none;
+  transition: all 0.2s;
 }
 
 .input-group input:focus, .input-group select:focus {
@@ -416,4 +418,127 @@ body {
   color: #4ade80;
   overflow-y: auto;
   border: 1px solid var(--border-color);
+}
+
+/* Mobile Header & Sidebar Toggle */
+.mobile-header {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 20px;
+  background: var(--sidebar-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.mobile-menu-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-header-title {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--primary);
+}
+
+.mobile-close-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .dashboard-layout {
+    flex-direction: column;
+  }
+  
+  .mobile-header {
+    display: flex;
+  }
+  
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    bottom: 0;
+    z-index: 50;
+    transition: left 0.3s ease;
+    width: 280px;
+    box-shadow: none;
+  }
+  
+  .sidebar.open {
+    left: 0;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.5);
+  }
+
+  .sidebar-overlay.show {
+    display: block;
+    opacity: 1;
+  }
+
+  .mobile-close-btn {
+    display: block;
+  }
+
+  .main-content {
+    flex: 1;
+    width: 100%;
+  }
+
+  /* Make forms and inputs full width on mobile */
+  .device-view {
+    padding: 15px;
+  }
+
+  .device-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+  
+  .header-actions .icon-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  /* Gateway bluetooth flex columns */
+  .bluetooth-manager .card {
+    flex: 1 1 100% !important;
+  }
+  
+  .bluetooth-manager > div[style] {
+    flex-direction: column !important;
+  }
+
+  .input-group > div[style] {
+    flex-direction: column !important;
+  }
+
+  .input-group button.btn-secondary {
+    width: 100%;
+  }
 }

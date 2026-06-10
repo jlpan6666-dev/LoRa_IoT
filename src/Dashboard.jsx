@@ -5,12 +5,18 @@ import DeviceView from './DeviceView';
 import GatewaySettings from './GatewaySettings';
 import NewDeviceWizard from './NewDeviceWizard';
 import HomeOverview from './HomeOverview';
-import { Settings, Plus, LayoutDashboard, LogOut, Trash2, Home, Activity } from 'lucide-react';
+import { Settings, Plus, LayoutDashboard, LogOut, Trash2, Home, Activity, Menu, X } from 'lucide-react';
 
 export default function Dashboard({ onLogout }) {
   const [devices, setDevices] = useState([]);
   const [activeView, setActiveView] = useState('home'); // 'home', 'gateway', or deviceId
   const [showWizard, setShowWizard] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const handleNavClick = (view) => {
+    setActiveView(view);
+    setIsSidebarOpen(false);
+  };
 
   useEffect(() => {
     // Listen to devices from Firebase
@@ -34,23 +40,37 @@ export default function Dashboard({ onLogout }) {
 
   return (
     <div className="dashboard-layout">
+      {/* Mobile Header Toggle */}
+      <div className="mobile-header">
+        <button className="mobile-menu-btn" onClick={() => setIsSidebarOpen(true)}>
+          <Menu size={24} />
+        </button>
+        <span className="mobile-header-title">LoRa 控制中心</span>
+      </div>
+
       {/* Sidebar */}
-      <aside className="sidebar">
+      <div className={`sidebar-overlay ${isSidebarOpen ? 'show' : ''}`} onClick={() => setIsSidebarOpen(false)}></div>
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <Activity size={28} color="var(--primary)" />
-          <h2>LoRa 控制中心</h2>
+          <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+            <Activity size={28} color="var(--primary)" />
+            <h2>LoRa 控制中心</h2>
+          </div>
+          <button className="mobile-close-btn" onClick={() => setIsSidebarOpen(false)}>
+            <X size={24} />
+          </button>
         </div>
         
         <nav className="sidebar-nav">
           <div 
             className={`nav-item ${activeView === 'home' ? 'active' : ''}`}
-            onClick={() => setActiveView('home')}
+            onClick={() => handleNavClick('home')}
           >
             <Home size={20} /> 總覽首頁
           </div>
           <div 
             className={`nav-item ${activeView === 'gateway' ? 'active' : ''}`}
-            onClick={() => setActiveView('gateway')}
+            onClick={() => handleNavClick('gateway')}
           >
             <Settings size={20} /> IAQ 藍牙設定
           </div>
@@ -60,7 +80,7 @@ export default function Dashboard({ onLogout }) {
             <div 
               key={dev.id} 
               className={`nav-item ${activeView === dev.id ? 'active' : ''}`}
-              onClick={() => setActiveView(dev.id)}
+              onClick={() => handleNavClick(dev.id)}
             >
               <LayoutDashboard size={20} />
               <span className="nav-label">{dev.name}</span>
