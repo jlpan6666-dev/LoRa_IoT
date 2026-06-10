@@ -15,6 +15,7 @@ export default function DeviceView({ deviceId }) {
   const [logs, setLogs] = useState([]);
   
   const clientRef = useRef(null);
+  const hasGeneratedRef = useRef(false);
 
   // Fetch device from Firebase
   useEffect(() => {
@@ -85,6 +86,41 @@ export default function DeviceView({ deviceId }) {
           const data = JSON.parse(payloadString);
           // Update live data, merging with previous
           setLiveData(prev => ({ ...prev, ...data }));
+
+          // Auto-generate widgets if empty
+          if ((!device.components || device.components.length === 0) && !hasGeneratedRef.current) {
+            hasGeneratedRef.current = true;
+            const newComps = [];
+            const keys = Object.keys(data).filter(k => k !== 'id');
+            keys.forEach(k => {
+              let name = k;
+              let unit = '';
+              let min = 0;
+              let max = 100;
+              if (k === 'temp') { name = '溫度'; unit = '°C'; }
+              else if (k === 'humi') { name = '濕度'; unit = '%'; }
+              else if (k === 'lux') { name = '光照度'; unit = 'lx'; max = 10000; }
+              else if (k === 'bat-v') { name = '電池電壓'; unit = 'V'; max = 5; }
+              else if (k === 'bat-a') { name = '電池電流'; unit = 'A'; max = 1; }
+              else if (k === 'ir-1') { name = '紅外線 1'; }
+              else if (k === 'ir-2') { name = '紅外線 2'; }
+              
+              newComps.push({
+                id: 'comp_' + Math.random().toString(16).substr(2, 6),
+                type: 'Gauge',
+                name,
+                dataPath: k,
+                unit,
+                min,
+                max
+              });
+            });
+            if (newComps.length > 0) {
+              updateDoc(doc(db, 'devices', device.id), { components: newComps }).catch(e => console.error(e));
+              addLog('✨ 已自動產生預設圖表元件');
+            }
+          }
+
         } catch (e) {
           addLog(`⚠ 解析資料失敗: ${e.message}`);
         }
@@ -196,6 +232,7 @@ export default function DeviceView({ deviceId }) {
             config={comp} 
             value={liveData[comp.dataPath]} 
             onRemove={() => removeComponent(comp.id)}
+            device={device}
           />
         ))}
         {(!device.components || device.components.length === 0) && (
@@ -222,7 +259,7 @@ export default function DeviceView({ deviceId }) {
   );
 }
 
-function Widget({ config, value, onRemove }) {
+function Widget({ config, value, onRemove, device }) {
   // Safe default value parsing
   const valNum = Number(value);
   const isValValid = !isNaN(valNum) && value !== undefined;
@@ -263,7 +300,7 @@ function Widget({ config, value, onRemove }) {
     // For simplicity in this live view, we just show a static or simple gauge-like bar, 
     // OR we can implement a tiny sliding window history if we store state inside the widget.
     // To implement history, we'd need a useEffect inside the Widget component.
-    return <HistoryChartWidget config={config} value={value} onRemove={onRemove} />;
+    return <HistoryChartWidget config={config} value={value} onRemove={onRemove} device={device} />;
   }
 
   return (
@@ -275,46 +312,76 @@ function Widget({ config, value, onRemove }) {
   );
 }
 
-// A specialized widget that keeps its own sliding window history for Line/Bar charts
-function HistoryChartWidget({ config, value, onRemove }) {
+import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+
+function HistoryChartWidget({ config, value, onRemove, device }) {
   const [history, setHistory] = useState([]);
-  
+  const [loading, setLoading] = useState(true);
+
+  // Fetch history from Firebase
   useEffect(() => {
-    if (value !== undefined && value !== null) {
+    async function fetchHistory() {
+      if (!device?.topic) return;
+      try {
+        const q = query(
+          collection(db, 'device_history'),
+          where('topic', '==', device.topic),
+          orderBy('timestamp', 'asc'), // Ascending for chronological order
+          limit(100)
+        );
+        const snapshot = await getDocs(q);
+        const data = snapshot.docs.map(doc => {
+          const d = doc.data();
+          const ts = d.timestamp?.toDate ? d.timestamp.toDate() : new Date(d.timestamp);
+          const timeStr = `${ts.getHours()}:${String(ts.getMinutes()).padStart(2,'0')}`;
+          // Get the specific data path value
+          const val = d.data && d.data[config.dataPath] !== undefined ? d.data[config.dataPath] : null;
+          return [timeStr, val];
+        }).filter(item => item[1] !== null);
+        
+        setHistory(data);
+      } catch (err) {
+        console.error("Fetch history error:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchHistory();
+  }, [device?.topic, config.dataPath]);
+
+  // Append new live data points locally so we don't need to poll
+  useEffect(() => {
+    if (value !== undefined && value !== null && !loading) {
       const now = new Date();
-      const timeStr = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+      const timeStr = `${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
       setHistory(prev => {
         const next = [...prev, [timeStr, Number(value)]];
-        if (next.length > 20) next.shift(); // Keep last 20 points
+        if (next.length > 100) next.shift();
         return next;
       });
     }
-  }, [value]);
+  }, [value, loading]);
 
   const option = {
     backgroundColor: 'transparent',
     tooltip: { trigger: 'axis' },
     xAxis: { type: 'category', boundaryGap: config.type === 'Bar' },
-    yAxis: { type: 'value' },
+    yAxis: { type: 'value', name: config.unit || '' },
     series: [{
       name: config.name,
-      type: config.type.toLowerCase(), // 'line' or 'bar'
+      type: config.type.toLowerCase(),
       data: history,
       smooth: true,
       itemStyle: { color: '#3b82f6' },
-      areaStyle: config.type === 'Line' ? {
-        color: {
-          type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
-          colorStops: [{ offset: 0, color: 'rgba(59,130,246,0.5)' }, { offset: 1, color: 'rgba(59,130,246,0)' }]
-        }
-      } : undefined
-    }]
+      areaStyle: config.type === 'Line' ? { color: 'rgba(59, 130, 246, 0.2)' } : undefined
+    }],
+    grid: { left: 40, right: 20, bottom: 30, top: 40 }
   };
 
   return (
-    <div className="widget card">
+    <div className="widget card history-widget">
       <button className="widget-remove" onClick={onRemove}><X size={14}/></button>
-      <div className="widget-title">{config.name} <span style={{fontSize:'12px', color:'#94a3b8'}}>({config.dataPath})</span></div>
+      <div className="widget-title">{config.name} {loading ? '(載入中...)' : ''}</div>
       <ReactECharts option={option} style={{ height: '250px', width: '100%' }} theme="dark" />
     </div>
   );
