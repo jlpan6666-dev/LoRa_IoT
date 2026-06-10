@@ -41,8 +41,17 @@ export default function DeviceView({ deviceId }) {
 
     if (!device.brokerUrl) return;
 
+    let finalBrokerUrl = device.brokerUrl;
+    if (window.location.protocol === 'https:' && finalBrokerUrl.startsWith('ws://')) {
+      finalBrokerUrl = finalBrokerUrl.replace(/^ws:\/\//i, 'wss://');
+      // Auto upgrade typical insecure ports to secure websocket port (8084)
+      finalBrokerUrl = finalBrokerUrl.replace(/:1883(\/|$)/, ':8084$1')
+                                     .replace(/:8883(\/|$)/, ':8084$1')
+                                     .replace(/:8083(\/|$)/, ':8084$1');
+    }
+
     setMqttStatus('connecting');
-    addLog(`正在嘗試連線至: ${device.brokerUrl}`);
+    addLog(`正在嘗試連線至: ${finalBrokerUrl}`);
 
     const options = {
       clientId: `react_${Math.random().toString(16).substr(2, 8)}`,
@@ -53,7 +62,7 @@ export default function DeviceView({ deviceId }) {
     if (device.mqttPw) options.password = device.mqttPw;
 
     try {
-      const client = mqtt.connect(device.brokerUrl, options);
+      const client = mqtt.connect(finalBrokerUrl, options);
       clientRef.current = client;
 
       client.on('connect', () => {

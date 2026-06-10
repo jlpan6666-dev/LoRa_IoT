@@ -50,7 +50,15 @@ export default function NewDeviceWizard({ onClose, onDeviceAdded }) {
       // Auto convert raw broker to websocket url if it's typical
       let url = status.broker;
       if (!url.startsWith('ws://') && !url.startsWith('wss://')) {
-        url = (status.port === '8084' || status.port === '443') ? `wss://${url}:${status.port}/mqtt` : `ws://${url}:${status.port}/mqtt`;
+        const isSecure = window.location.protocol === 'https:';
+        let wsPort = status.port;
+        
+        // Auto convert standard MQTT TCP ports to standard WebSocket ports
+        if (wsPort === '1883' || wsPort === '8883') {
+           wsPort = isSecure ? '8084' : '8083';
+        }
+        
+        url = (isSecure || wsPort === '8084' || wsPort === '443') ? `wss://${url}:${wsPort}/mqtt` : `ws://${url}:${wsPort}/mqtt`;
       }
       setBrokerUrl(url);
     }
