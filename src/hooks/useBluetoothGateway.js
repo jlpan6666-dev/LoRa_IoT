@@ -50,8 +50,9 @@ export function useBluetoothGateway() {
   }, [addLog]);
 
   const handleCharacteristicValueChanged = (event) => {
-    const val = new TextDecoder().decode(event.target.value);
+    let val = new TextDecoder().decode(event.target.value);
     addLog(`< ${val}`, 'success');
+    val = val.trim(); // Trim to remove hidden newlines or spaces that break startsWith
 
     if (val.startsWith('WIFI:CFG:')) {
       const p = val.slice(9).split(',');
