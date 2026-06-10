@@ -12,6 +12,7 @@ export default function BluetoothManager({ onMqttUpdate }) {
     wifiList,
     mqttStatus,
     messages,
+    setMessages,
     liveData,
     logs,
     clearMessages

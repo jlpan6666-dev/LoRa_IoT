@@ -21,6 +21,7 @@ export function useBluetoothGateway() {
   const deviceRef = useRef(null);
   const txCharRef = useRef(null);
   const rxCharRef = useRef(null);
+  const sendQueue = useRef(Promise.resolve());
 
   const addLog = useCallback((msg, type = 'info') => {
     setLogs(prev => [...prev, { time: new Date(), msg, type }]);
@@ -41,6 +42,7 @@ export function useBluetoothGateway() {
           await txCharRef.current.writeValue(data);
           await new Promise(r => setTimeout(r, 60)); // prevent overflow
         }
+        await txCharRef.current.writeValue(new TextEncoder().encode('END'));
       } catch (e) {
         addLog(`傳送失敗: ${e.message}`, 'error');
       }
@@ -160,6 +162,7 @@ export function useBluetoothGateway() {
     wifiList,
     mqttStatus,
     messages,
+    setMessages,
     liveData,
     logs,
     clearMessages
