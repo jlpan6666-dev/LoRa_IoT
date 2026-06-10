@@ -69,8 +69,12 @@ export default function DeviceView({ deviceId }) {
         setMqttStatus('online');
         addLog('✅ 連線成功！');
         if (device.topic) {
-          client.subscribe(device.topic);
-          addLog(`已訂閱主題: ${device.topic}`);
+          let subTopic = device.topic;
+          if (!subTopic.endsWith('#')) {
+            subTopic += subTopic.endsWith('/') ? '#' : '/#';
+          }
+          client.subscribe(subTopic);
+          addLog(`已訂閱主題: ${subTopic}`);
         }
       });
 
