@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { doc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc, collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from './firebase';
 import mqtt from 'mqtt';
 import ReactECharts from 'echarts-for-react';
@@ -29,6 +29,34 @@ export default function DeviceView({ deviceId }) {
     });
     return () => unsub();
   }, [deviceId]);
+
+  // Fetch initial latest data from history
+  useEffect(() => {
+    if (!device?.topic) return;
+    
+    async function fetchLatest() {
+      try {
+        const q = query(
+          collection(db, 'device_history'),
+          where('topic', '==', device.topic),
+          orderBy('timestamp', 'desc'),
+          limit(1)
+        );
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const latestDoc = snap.docs[0].data();
+          if (latestDoc.data) {
+            // Only set if liveData is still empty (in case MQTT beat us to it)
+            setLiveData(prev => Object.keys(prev).length === 0 ? latestDoc.data : prev);
+            addLog('☁️ 已載入最新一筆歷史紀錄');
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch latest data', err);
+      }
+    }
+    fetchLatest();
+  }, [device?.topic]);
 
   // Connect to MQTT when device config changes
   useEffect(() => {
