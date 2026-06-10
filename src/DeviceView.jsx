@@ -340,7 +340,7 @@ function Widget({ config, value, onRemove, device }) {
   );
 }
 
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+
 
 function HistoryChartWidget({ config, value, onRemove, device }) {
   const [history, setHistory] = useState([]);
