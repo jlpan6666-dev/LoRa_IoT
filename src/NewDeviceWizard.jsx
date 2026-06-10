@@ -17,15 +17,8 @@ export default function NewDeviceWizard({ onClose, onDeviceAdded }) {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // 預設建立的元件清單 (使用最新的 JSON 欄位對應)
-    const defaultComponents = [
-      { id: Date.now().toString() + '1', type: 'value', title: '🪲 捕蟲數量 (通道 A)', dataKey: 'ir-1', unit: '隻', color: '#10b981' },
-      { id: Date.now().toString() + '2', type: 'value', title: '🪲 捕蟲數量 (通道 B)', dataKey: 'ir-2', unit: '隻', color: '#3b82f6' },
-      { id: Date.now().toString() + '3', type: 'value', title: '🌡️ 環境溫度', dataKey: 'temp', unit: '°C', color: '#f59e0b' },
-      { id: Date.now().toString() + '4', type: 'value', title: '💧 環境濕度', dataKey: 'humi', unit: '%', color: '#0ea5e9' },
-      { id: Date.now().toString() + '5', type: 'value', title: '☀️ 照度 (Lux)', dataKey: 'lux', unit: 'lx', color: '#eab308' },
-      { id: Date.now().toString() + '6', type: 'value', title: '🔋 電池電壓', dataKey: 'bat-v', unit: 'V', color: '#8b5cf6' }
-    ];
+    // Remove old defaultComponents so that the new DeviceView auto-generate logic triggers when first data arrives.
+    const defaultComponents = [];
 
     try {
       const docRef = await addDoc(collection(db, 'devices'), {
