@@ -41,7 +41,7 @@ export default function DeviceView({ deviceId }) {
 
     if (!device.brokerUrl) return;
 
-    let finalBrokerUrl = device.brokerUrl;
+    let finalBrokerUrl = device.brokerUrl.trim();
     if (window.location.protocol === 'https:' && finalBrokerUrl.startsWith('ws://')) {
       finalBrokerUrl = finalBrokerUrl.replace(/^ws:\/\//i, 'wss://');
       // Auto upgrade typical insecure ports to secure websocket port (8084)
@@ -58,8 +58,8 @@ export default function DeviceView({ deviceId }) {
       keepalive: 60,
       reconnectPeriod: 3000
     };
-    if (device.mqttUser) options.username = device.mqttUser;
-    if (device.mqttPw) options.password = device.mqttPw;
+    if (device.mqttUser) options.username = device.mqttUser.trim();
+    if (device.mqttPw) options.password = device.mqttPw.trim();
 
     try {
       const client = mqtt.connect(finalBrokerUrl, options);
@@ -69,7 +69,7 @@ export default function DeviceView({ deviceId }) {
         setMqttStatus('online');
         addLog('✅ 連線成功！');
         if (device.topic) {
-          let subTopic = device.topic;
+          let subTopic = device.topic.trim();
           if (!subTopic.endsWith('#')) {
             subTopic += subTopic.endsWith('/') ? '#' : '/#';
           }
@@ -81,11 +81,12 @@ export default function DeviceView({ deviceId }) {
       client.on('message', (topic, message) => {
         try {
           const payloadString = message.toString();
+          addLog(`📥 收到來自 [${topic}] 的資料: ${payloadString}`);
           const data = JSON.parse(payloadString);
           // Update live data, merging with previous
           setLiveData(prev => ({ ...prev, ...data }));
         } catch (e) {
-          // not JSON, ignore or log
+          addLog(`⚠ 解析資料失敗: ${e.message}`);
         }
       });
 

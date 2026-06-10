@@ -88,7 +88,10 @@ export default function ComponentBuilder({ device, liveData, onClose }) {
                 <option key={k} value={k} />
               ))}
             </datalist>
-            <small style={{color: '#94a3b8', marginTop: '4px', display:'block'}}>點擊輸入框可自動帶入硬體回報的欄位，或手動填寫對應的 JSON Key。</small>
+            <small style={{color: '#94a3b8', marginTop: '4px', display:'block'}}>
+              點擊輸入框可自動帶入硬體回報的欄位，或手動填寫對應的 JSON Key。<br/>
+              <span style={{color: '#f59e0b'}}>💡 提示：網頁剛重新整理時清單會是空的，請等硬體傳送第一筆 MQTT 資料 (約需等候 1 分鐘) 後再點擊。</span>
+            </small>
           </div>
 
           <div className="input-group">
