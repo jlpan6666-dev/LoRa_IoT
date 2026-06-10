@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { collection, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
 import { db } from './firebase';
 import DeviceView from './DeviceView';
-import GatewaySettings from './GatewaySettings';
 import NewDeviceWizard from './NewDeviceWizard';
 import HomeOverview from './HomeOverview';
 import { Settings, Plus, LayoutDashboard, LogOut, Trash2, Home, Activity, Menu, X } from 'lucide-react';
@@ -68,12 +67,6 @@ export default function Dashboard({ onLogout }) {
           >
             <Home size={20} /> 總覽首頁
           </div>
-          <div 
-            className={`nav-item ${activeView === 'gateway' ? 'active' : ''}`}
-            onClick={() => handleNavClick('gateway')}
-          >
-            <Settings size={20} /> IAQ 藍牙設定
-          </div>
           
           <div className="nav-divider">已連結裝置</div>
           {devices.map(dev => (
@@ -113,8 +106,6 @@ export default function Dashboard({ onLogout }) {
             onAddDevice={() => setShowWizard(true)} 
             onSelectDevice={(id) => setActiveView(id)}
           />
-        ) : activeView === 'gateway' ? (
-          <GatewaySettings />
         ) : (
           <DeviceView deviceId={activeView} />
         )}
