@@ -91,6 +91,19 @@ export function useBluetoothGateway() {
       const enabled = val.slice(8) === '1';
       setMqttStatus(prev => ({ ...prev, enabled }));
       setMessages(m => ({ ...m, mqtt: enabled ? '✅ MQTT 已啟用' : '⏹ MQTT 已停用' }));
+    } else if (val.startsWith('WIFI:UP:')) {
+      const ip = val.slice(8).trim();
+      setWifiStatus(prev => ({ ...prev, connected: true, ip }));
+      setMessages(m => ({ ...m, wifi: '✅ 已連線 IP: ' + ip }));
+    } else if (val.startsWith('WIFI:DOWN')) {
+      setWifiStatus(prev => ({ ...prev, connected: false, ip: '' }));
+      setMessages(m => ({ ...m, wifi: '❌ WiFi 已斷線' }));
+    } else if (val.startsWith('MQTT:UP:')) {
+      setMqttStatus(prev => ({ ...prev, connected: true }));
+      setMessages(m => ({ ...m, mqtt: '✅ MQTT 已連線' }));
+    } else if (val.startsWith('MQTT:DOWN')) {
+      setMqttStatus(prev => ({ ...prev, connected: false }));
+      setMessages(m => ({ ...m, mqtt: '❌ MQTT 已斷線' }));
     } else if (val.startsWith('DATA:LIVE:')) {
       const raw = val.slice(10);
       if (raw) {
